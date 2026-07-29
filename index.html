@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Contador</title>
+<style>
+  body {
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+    background: #f2f2f2;
+  }
+  #numero {
+    font-size: 6rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #111;
+  }
+  button {
+    font-size: 1.5rem;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+  }
+  button:disabled {
+    background: #93c5fd;
+    cursor: not-allowed;
+  }
+  button:active:not(:disabled) {
+    background: #1e40af;
+  }
+  #estado {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: #666;
+    min-height: 20px;
+  }
+</style>
+</head>
+<body>
+
+  <div id="numero">...</div>
+  <button id="boton" onclick="aumentar()" disabled>Aumentar</button>
+  <div id="estado">Cargando contador...</div>
+
+  <script>
+    // Namespace y key del contador compartido (creados con Abacus API)
+    const NAMESPACE = "lab-claude-2026";
+    const KEY = "contador-publico-2000";
+    const BASE = "https://abacus.jasoncameron.dev";
+
+    const numeroEl = document.getElementById("numero");
+    const botonEl = document.getElementById("boton");
+    const estadoEl = document.getElementById("estado");
+
+    // Al cargar la página: solo CONSULTA el valor actual (no lo incrementa)
+    async function cargarValorActual() {
+      try {
+        const res = await fetch(`${BASE}/get/${NAMESPACE}/${KEY}`);
+        if (!res.ok) throw new Error("No se pudo obtener el valor");
+        const data = await res.json();
+        numeroEl.innerText = data.value;
+        estadoEl.innerText = "";
+        botonEl.disabled = false;
+      } catch (err) {
+        estadoEl.innerText = "Error al conectar con el servidor del contador.";
+        numeroEl.innerText = "--";
+      }
+    }
+
+    // Al presionar el boton: INCREMENTA el contador compartido
+    async function aumentar() {
+      botonEl.disabled = true;
+      try {
+        const res = await fetch(`${BASE}/hit/${NAMESPACE}/${KEY}`);
+        if (!res.ok) throw new Error("No se pudo incrementar");
+        const data = await res.json();
+        numeroEl.innerText = data.value;
+      } catch (err) {
+        estadoEl.innerText = "Error al actualizar el contador.";
+      } finally {
+        botonEl.disabled = false;
+      }
+    }
+
+    cargarValorActual();
+  </script>
+
+</body>
+</html>
